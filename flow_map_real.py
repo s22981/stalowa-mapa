@@ -15,6 +15,14 @@ FILE_EXCEL_RJ = "RJ - od 01.04.2026 r..xlsx"
 CENTER_POINT = (50.5828, 22.0533)
 DIST_METERS = 18000 # 18 km
 
+# 1 - OG 2 - Symulacja ze zwiększonym ruchem
+SIMULATION = 2
+
+SEGMENT_OVERRIDES = {
+    tuple(sorted(["SOLIDARNOŚCI - PKP", "OFIAR KATYNIA - SUPER MARKET"])): 260,
+    tuple(sorted(["OFIAR KATYNIA - CMENTARZ", "OKULICKIEGO - WIADUKT"])): 260,
+}
+
 print("1. Wczytuję precyzyjne współrzędne przystanków...")
 coords_df = pd.read_csv(FILE_COORDS, sep=";")
 stop_coords = dict(zip(coords_df['StopName'], zip(coords_df['Latitude'], coords_df['Longitude'])))
@@ -87,6 +95,12 @@ for sheet_name, df_sheet in xls.items():
         if seg_key not in segments: segments[seg_key] = 0
         segments[seg_key] += load
 
+if SIMULATION == 2:
+    print("Stosuję nadpisania dla symulacji 2...")
+    for seg_key, extra_load in SEGMENT_OVERRIDES.items():
+        segments[seg_key] = segments.get(seg_key, 0) + extra_load
+
+OUTPUT_FILE = "mapa_potokow_rzeczywista.html" if SIMULATION == 1 else f"mapa_potokow_symulacja{SIMULATION}.html"
 
 print("\n4. Pobieram układ ulic do wytyczenia rzeczywistych tras autobusów...")
 
@@ -158,5 +172,5 @@ for stop_name, (lat, lon) in stop_coords.items():
             tooltip=stop_name
         ).add_to(stalowa_wola_map)
 
-stalowa_wola_map.save("mapa_potokow_rzeczywista.html")
-print("\nSukces! Wygenerowano plik: mapa_potokow_rzeczywista.html")
+stalowa_wola_map.save(OUTPUT_FILE)
+print(f"\nSukces! Wygenerowano plik: {OUTPUT_FILE}")
