@@ -123,6 +123,12 @@ for (stopA, stopB), total_load in segments.items():
         
         folium.PolyLine(
             locations=route_coords,
+            weight=weight + 3,
+            color="#2c3e50",
+            opacity=0.6,
+        ).add_to(stalowa_wola_map)
+        folium.PolyLine(
+            locations=route_coords,
             weight=weight,
             color="#e74c3c",  
             opacity=0.8,
@@ -130,6 +136,11 @@ for (stopA, stopB), total_load in segments.items():
         ).add_to(stalowa_wola_map)
         
     except nx.NetworkXNoPath:
+        folium.PolyLine(
+            locations=[coordA, coordB],
+            weight=weight + 3,
+            color="#2c3e50", opacity=0.6, dash_array="5, 5",
+        ).add_to(stalowa_wola_map)
         folium.PolyLine(
             locations=[coordA, coordB],
             weight=weight,
