@@ -18,9 +18,21 @@ DIST_METERS = 18000 # 18 km
 # 1 - OG 2 - Symulacja ze zwiększonym ruchem
 SIMULATION = 2
 
+FICTIONAL_STOPS = {
+    "SIM - ZACHÓD I":  (50.570169, 22.027766),
+    "SIM - ZACHÓD II": (50.571340, 22.018004),
+    "SIM - POŁUDNIE I":  (50.560880, 22.031078),
+    "SIM - POŁUDNIE II":  (50.554013, 22.024282),
+}
+
 SEGMENT_OVERRIDES = {
     tuple(sorted(["SOLIDARNOŚCI - PKP", "OFIAR KATYNIA - SUPER MARKET"])): 260,
     tuple(sorted(["OFIAR KATYNIA - CMENTARZ", "OKULICKIEGO - WIADUKT"])): 260,
+    tuple(sorted(["OFIAR KATYNIA - CMENTARZ", "SIM - ZACHÓD I"])): 260,
+    tuple(sorted(["SIM - ZACHÓD I", "SIM - ZACHÓD II"])): 260,
+    tuple(sorted(["OFIAR KATYNIA - CMENTARZ", "SIM - POŁUDNIE I"])): 260,
+    tuple(sorted(["SIM - POŁUDNIE I", "SIM - POŁUDNIE II"])): 260,
+    tuple(sorted(["SIM - ZACHÓD II", "SIM - POŁUDNIE II"])): 260,
 }
 
 print("1. Wczytuję precyzyjne współrzędne przystanków...")
@@ -97,6 +109,7 @@ for sheet_name, df_sheet in xls.items():
 
 if SIMULATION == 2:
     print("Stosuję nadpisania dla symulacji 2...")
+    stop_coords.update(FICTIONAL_STOPS)
     for seg_key, extra_load in SEGMENT_OVERRIDES.items():
         segments[seg_key] = segments.get(seg_key, 0) + extra_load
 
@@ -120,8 +133,24 @@ for (stopA, stopB), total_load in segments.items():
 
     seg_key = tuple(sorted([stopA, stopB]))
     is_simulated = SIMULATION == 2 and seg_key in SEGMENT_OVERRIDES
+    is_fictional = stopA in FICTIONAL_STOPS or stopB in FICTIONAL_STOPS
     line_color = "#2980b9" if is_simulated else "#e74c3c"
     border_color = "#1a5276" if is_simulated else "#2c3e50"
+
+    if is_fictional:
+        # Fikcyjne przystanki – prosta linia, bez routingu po sieci drogowej
+        folium.PolyLine(
+            locations=[coordA, coordB],
+            weight=weight + 3,
+            color=border_color, opacity=0.6, dash_array="6, 4",
+        ).add_to(stalowa_wola_map)
+        folium.PolyLine(
+            locations=[coordA, coordB],
+            weight=weight,
+            color=line_color, opacity=0.8, dash_array="6, 4",
+            tooltip=f"<b>Trasa (symulacja):</b> {stopA} ↔ {stopB}<br><b>Skumulowany ruch:</b> {total_load:.1f} pasażerów"
+        ).add_to(stalowa_wola_map)
+        continue
 
     node_a = ox.distance.nearest_nodes(G, X=coordA[1], Y=coordA[0])
     node_b = ox.distance.nearest_nodes(G, X=coordB[1], Y=coordB[0])
