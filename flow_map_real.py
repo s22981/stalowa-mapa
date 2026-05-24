@@ -117,7 +117,12 @@ for (stopA, stopB), total_load in segments.items():
         
     coordA, coordB = stop_coords[stopA], stop_coords[stopB]
     weight = 2 + (total_load / max_load) * 12
-    
+
+    seg_key = tuple(sorted([stopA, stopB]))
+    is_simulated = SIMULATION == 2 and seg_key in SEGMENT_OVERRIDES
+    line_color = "#2980b9" if is_simulated else "#e74c3c"
+    border_color = "#1a5276" if is_simulated else "#2c3e50"
+
     node_a = ox.distance.nearest_nodes(G, X=coordA[1], Y=coordA[0])
     node_b = ox.distance.nearest_nodes(G, X=coordB[1], Y=coordB[0])
     
@@ -138,13 +143,13 @@ for (stopA, stopB), total_load in segments.items():
         folium.PolyLine(
             locations=route_coords,
             weight=weight + 3,
-            color="#2c3e50",
+            color=border_color,
             opacity=0.6,
         ).add_to(stalowa_wola_map)
         folium.PolyLine(
             locations=route_coords,
             weight=weight,
-            color="#e74c3c",  
+            color=line_color,
             opacity=0.8,
             tooltip=f"<b>Trasa:</b> {stopA} ↔ {stopB}<br><b>Skumulowany ruch:</b> {total_load:.1f} pasażerów"
         ).add_to(stalowa_wola_map)
@@ -153,12 +158,12 @@ for (stopA, stopB), total_load in segments.items():
         folium.PolyLine(
             locations=[coordA, coordB],
             weight=weight + 3,
-            color="#2c3e50", opacity=0.6, dash_array="5, 5",
+            color=border_color, opacity=0.6, dash_array="5, 5",
         ).add_to(stalowa_wola_map)
         folium.PolyLine(
             locations=[coordA, coordB],
             weight=weight,
-            color="#e74c3c", opacity=0.8, dash_array="5, 5",
+            color=line_color, opacity=0.8, dash_array="5, 5",
             tooltip=f"{stopA} ↔ {stopB} (linia prosta - brak drogi)"
         ).add_to(stalowa_wola_map)
 
